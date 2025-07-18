@@ -1,7 +1,9 @@
+
+  
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Weather App</title>
+  <title>Weather Forecast</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,22 +14,34 @@
 
   <script>
     async function getWeather() {
-      const city = document.getElementById("cityInput").value;
-      const apiKey = "0f979bcecd8dbfdcff4b8698f2f4affa"; // Replace later
-      const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+      const city = document.getElementById("cityInput").value.trim();
+      const apiKey = "0f979bcecd8dbfdcff4b8698f2f4affa"; // Replace with your real OpenWeatherMap API key
+      const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
 
-      const response = await fetch(url);
-      const data = await response.json();
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
 
-      if (data.cod === 200) {
-        document.getElementById("result").innerHTML =
-          `🌡️ Temp: ${data.main.temp}°C<br>
-           🌧️ Weather: ${data.weather[0].description}`;
-      } else {
-        document.getElementById("result").innerText = "City not found!";
+        if (data.cod === "200") {
+          const nextDay = data.list[8]; // 24 hours ahead (3h x 8 = 24h)
+          document.getElementById("result").innerHTML = `
+            <h2>📍 ${data.city.name}</h2>
+            <p>🕐 Forecast for: ${nextDay.dt_txt}</p>
+            <p>🌡️ Temperature: ${nextDay.main.temp}°C</p>
+            <p>💧 Humidity: ${nextDay.main.humidity}%</p>
+            <p>🌧️ Weather: ${nextDay.weather[0].description}</p>
+            <p>💨 Wind Speed: ${nextDay.wind.speed} m/s</p>
+          `;
+        } else {
+          document.getElementById("result").innerText = "City not found!";
+        }
+      } catch (error) {
+        document.getElementById("result").innerText = "Error fetching weather data.";
+        console.error("Fetch error:", error);
       }
     }
   </script>
 </body>
 </html>
+
 
