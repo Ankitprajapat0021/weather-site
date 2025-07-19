@@ -6,19 +6,28 @@
 </head>
 <body>
   <h1>Weather Forecast</h1>
+  
   <div class="search-box">
     <input type="text" id="cityInput" placeholder="Enter city name" onkeydown="if(event.key==='Enter') getWeather()">
     <button onclick="getWeather()">Check Weather</button>
   </div>
+
   <div id="loading" style="display: none;">Loading...</div>
   <div id="result"></div>
 
+  <div id="history-container">
+    <h3>Recent Searches</h3>
+    <ul id="history"></ul>
+    <button id="clearHistoryBtn" onclick="clearHistory()">Clear History</button>
+  </div>
+
   <script>
-    async function getWeather() {
-      const city = document.getElementById("cityInput").value.trim();
+    async function getWeather(cityParam = null) {
+      const cityInput = document.getElementById("cityInput");
+      const city = cityParam || cityInput.value.trim();
       const result = document.getElementById("result");
       const loading = document.getElementById("loading");
-      const apiKey = "0f979bcecd8dbfdcff4b8698f2f4affa";
+      const apiKey = "0f979bcecd8dbfdcff4b8698f2f4affa"; // Replace with your actual API key
       const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
 
       if (!city) {
@@ -35,7 +44,7 @@
         loading.style.display = "none";
 
         if (data.cod === "200") {
-          const nextDay = data.list[8];
+          const nextDay = data.list[8]; // Forecast 24 hours ahead
           result.innerHTML = `
             <h2>📍 ${data.city.name}</h2>
             <p>🕐 Forecast for: ${nextDay.dt_txt}</p>
@@ -44,7 +53,9 @@
             <p>🌧️ Weather: ${nextDay.weather[0].description}</p>
             <p>💨 Wind Speed: ${nextDay.wind.speed} m/s</p>
           `;
-          document.getElementById("cityInput").value = "";
+
+          addToHistory(data.city.name);
+          cityInput.value = "";
         } else {
           result.innerText = "City not found!";
         }
@@ -54,6 +65,35 @@
         console.error("Fetch error:", error);
       }
     }
+
+    function addToHistory(city) {
+      let history = JSON.parse(localStorage.getItem("weatherHistory")) || [];
+      if (!history.includes(city)) {
+        history.unshift(city);
+        if (history.length > 5) history.pop(); // Limit to 5
+        localStorage.setItem("weatherHistory", JSON.stringify(history));
+        displayHistory();
+      }
+    }
+
+    function displayHistory() {
+      const history = JSON.parse(localStorage.getItem("weatherHistory")) || [];
+      const list = document.getElementById("history");
+      list.innerHTML = "";
+      history.forEach(city => {
+        const li = document.createElement("li");
+        li.textContent = city;
+        li.onclick = () => getWeather(city);
+        list.appendChild(li);
+      });
+    }
+
+    function clearHistory() {
+      localStorage.removeItem("weatherHistory");
+      displayHistory();
+    }
+
+    window.onload = displayHistory;
   </script>
 </body>
 </html>
